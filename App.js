@@ -1,5 +1,7 @@
 import React from "react";
-import { StyleSheet, Button, View, SafeAreaView, FlatList, Image } from "react-native";
+import { StyleSheet, Button, View, SafeAreaView, FlatList } from "react-native";
+import CacheImage from './components/cache-image.component';
+import { shuffle } from 'lodash';
 
 class App extends React.Component {
   state = {
@@ -20,6 +22,33 @@ class App extends React.Component {
     });
   };
 
+  shufflePhotos = (array, currentIndex=0) => {
+    if (currentIndex >= array.length) {
+      return array;
+    }
+
+    let randomIndex = Math.floor(Math.random() * currentIndex);
+
+    let tempValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = tempValue;
+    let newIndex = currentIndex += 1;
+    return this.shufflePhotos(array, newIndex);
+  }
+
+  shufflePhotosLodash = (array) => {
+    return shuffle(array);
+  }
+
+  handleShuffle = async () => {
+    const shuffledPhotos = await this.shufflePhotosLodash(this.state.PHOTO_LIST);
+    // const shuffledPhotos = await this.shufflePhotos([1, 2, 3, 4, 5, 6]);
+    // console.log(shuffledPhotos);
+    this.setState({
+      PHOTO_LIST: shuffledPhotos
+    });
+  }
+
   componentDidMount() {
     this.getPhotos();
   }
@@ -28,20 +57,17 @@ class App extends React.Component {
     let photos = this.state.PHOTO_LIST;
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.flatlist}>
         {photos && photos.length > 0 && (
+        <View style={styles.flatlist}>
           <FlatList
-            data={photos.slice(0, 10)}
+            data={photos}
             renderItem={({ item }) => <Item photoUrl={item.url} />}
             keyExtractor={item => `${item.id}`}
             horizontal
           />
+          <Button title="Shuffle Photos" onPress={this.handleShuffle} />
+        </View>
         )}
-        </View>
-        <View style={styles.shuffle}>
-          <Button title="Shuffle Photos" />
-        </View>
-        {/* <View style={{backgroundColor: 'black', height: 400, width: 400}}></View> */}
       </SafeAreaView>
     );
   }
@@ -50,7 +76,8 @@ class App extends React.Component {
 const Item = ({ photoUrl }) => {
   return (
     <View style={styles.photoContainer}>
-      <Image style={styles.photo} source={{uri: `${photoUrl}`}} />
+      {/* <Image style={styles.photo} source={{uri: `${photoUrl}`, cache: 'only-if-cached'}} /> */}
+      <CacheImage style={styles.photo} uri={photoUrl} />
     </View>
   );
 };
@@ -64,7 +91,6 @@ const styles = StyleSheet.create({
   },
   flatlist: {
     flex: 3,
-    flexGrow: 1,
     justifyContent: 'center'
   },
   shuffle: {
