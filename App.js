@@ -1,7 +1,7 @@
 import React from "react";
 import {
   StyleSheet,
-  View,
+  View, 
   SafeAreaView,
   FlatList,
   StatusBar,
