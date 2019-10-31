@@ -18,3 +18,5 @@
 * `expo-file-system` library methods (e.g. `FileSystem.downloadAsync()`) were used to implement caching of images
 
 ### :link: Expo Link To Project
+
+[https://expo.io/@neon-flights/photo-slider](https://expo.io/@neon-flights/photo-slider)
