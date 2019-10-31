@@ -1,10 +1,20 @@
 import React from "react";
-import { StyleSheet, Button, View, SafeAreaView, FlatList } from "react-native";
-import CacheImage from './components/cache-image.component';
-import { shuffle } from 'lodash';
+import {
+  StyleSheet,
+  View,
+  SafeAreaView,
+  FlatList,
+  Dimensions,
+  StatusBar,
+  ActivityIndicator,
+  Button,
+  Text
+} from "react-native";
+import CacheImage from "./components/cache-image.component";
 
 class App extends React.Component {
   state = {
+    ready: false,
     PHOTO_LIST: null
   };
 
@@ -18,95 +28,123 @@ class App extends React.Component {
 
   displayPhotos = data => {
     this.setState({
+      ready: true,
       PHOTO_LIST: data
     });
   };
 
-  shufflePhotos = (array, currentIndex=0) => {
-    if (currentIndex >= array.length) {
-      return array;
+  shufflePhotos = array => {
+    let currentIndex = array.length,
+      tempValue,
+      randomIndex;
+
+    while (0 !== currentIndex) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+
+      tempValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = tempValue;
     }
-
-    let randomIndex = Math.floor(Math.random() * currentIndex);
-
-    let tempValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = tempValue;
-    let newIndex = currentIndex += 1;
-    return this.shufflePhotos(array, newIndex);
-  }
-
-  shufflePhotosLodash = (array) => {
-    return shuffle(array);
-  }
+    return array;
+  };
 
   handleShuffle = async () => {
-    const shuffledPhotos = await this.shufflePhotosLodash(this.state.PHOTO_LIST);
-    // const shuffledPhotos = await this.shufflePhotos([1, 2, 3, 4, 5, 6]);
-    // console.log(shuffledPhotos);
+    this.setState({ ready: false });
+    const shuffledPhotos = await this.shufflePhotos(this.state.PHOTO_LIST);
     this.setState({
+      ready: true,
       PHOTO_LIST: shuffledPhotos
     });
-  }
+  };
 
   componentDidMount() {
     this.getPhotos();
   }
 
   render() {
-    let photos = this.state.PHOTO_LIST;
-    return (
-      <SafeAreaView style={styles.container}>
-        {photos && photos.length > 0 && (
+    return !this.state.ready ? (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    ) : (
+      <SafeAreaView style={styles.loadedContainer}>
         <View style={styles.flatlist}>
           <FlatList
-            data={photos}
-            renderItem={({ item }) => <Item photoUrl={item.url} />}
+            data={this.state.PHOTO_LIST}
+            renderItem={({ item }) => (
+              <Item photoUrl={item.url} title={item.title} />
+            )}
             keyExtractor={item => `${item.id}`}
             horizontal
+            extraData={this.state}
           />
-          <Button title="Shuffle Photos" onPress={this.handleShuffle} />
         </View>
-        )}
+        <View style={styles.buttonContainer}>
+          <Button title="SHUFFLE PHOTOS" onPress={this.handleShuffle} />
+        </View>
       </SafeAreaView>
     );
   }
 }
 
-const Item = ({ photoUrl }) => {
+const Item = ({ photoUrl, title }) => {
   return (
     <View style={styles.photoContainer}>
-      {/* <Image style={styles.photo} source={{uri: `${photoUrl}`, cache: 'only-if-cached'}} /> */}
       <CacheImage style={styles.photo} uri={photoUrl} />
+      <View style={styles.photoTextContainer}>
+        <Text style={styles.photoText}>{title}</Text>
+      </View>
     </View>
   );
 };
 
+const screenWidth = Math.round(Dimensions.get("window").width);
+
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
-    marginTop: 50,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: "center"
+  },
+  loadedContainer: {
+    flex: 1,
+    marginTop: StatusBar.currentHeight
   },
   flatlist: {
-    flex: 3,
-    justifyContent: 'center'
+    justifyContent: "center"
   },
-  shuffle: {
-    flex: 1
+  buttonContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center"
   },
   photoContainer: {
     flex: 1,
-    height: 400,
-    width: 400,
-
+    height: screenWidth,
+    width: screenWidth,
+    shadowOffset: { width: 7, height: 7 },
+    shadowColor: "black",
+    shadowOpacity: 1.0
   },
   photo: {
-    flex: 1
+    flex: 1,
+    borderWidth: 3,
+    borderRadius: 20,
+    margin: 10
+  },
+  photoTextContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    transform: [{ rotate: '-45deg'}]
   },
   photoText: {
-    
+    textAlign: 'center',
+    fontSize: 40
   }
 });
 

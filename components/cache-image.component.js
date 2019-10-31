@@ -15,7 +15,7 @@ export default class CacheImage extends React.Component {
     const path = `${FileSystem.cacheDirectory}${name}`;
     const photo = await FileSystem.getInfoAsync(path);
     if (photo.exists) {
-      console.log("Reading image from cache");
+      // console.log("Reading image from cache");
       this.setState({
         source: {
           uri: photo.uri
@@ -24,7 +24,7 @@ export default class CacheImage extends React.Component {
       return;
     }
 
-    console.log("Downloading image to cache...");
+    // console.log("Downloading image to cache...");
     const newPhoto = await FileSystem.downloadAsync(photoLink, path);
     this.setState({
       source: {
